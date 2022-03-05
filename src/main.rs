@@ -1,4 +1,3 @@
-use std::fmt::format;
 use crate::matrix_element::El;
 use crate::tim::ScopedTimer;
 use crossbeam::channel::{Sender, Receiver, unbounded};
@@ -13,7 +12,7 @@ pub type Int = i32;
 pub type Fl = f32;
 pub type Tup = (El, El, El, El);
 
-pub const MIN_TOP: Int = -50;
+pub const MIN_TOP: Int = -15;
 pub const MAX_TOP: Int = -MIN_TOP;
 pub const MIN_BTM: Int = MIN_TOP;
 pub const MAX_BTM: Int = MAX_TOP;
@@ -35,20 +34,19 @@ fn main() {
     });
 
     let identity = Matrix2::identity();
-    (MIN_TOP..=MAX_TOP).into_par_iter().for_each_with(tx.clone(), |tx, tl_top| {
+    (MIN_TOP..=MAX_TOP).into_par_iter().for_each_with(tx, |tx, tl_top| {
         let _st = ScopedTimer::new(format!("tl_top at {}", tl_top));
-
         (MIN_BTM..=MAX_BTM).into_par_iter().for_each_with(tx.clone(), |tx, tl_btm| {
             let tl = El::new(tl_top, tl_btm);
 
             if tl.res.is_normal() {
-                (MIN_TOP..=MAX_TOP).into_par_iter().for_each_with(tx.clone(), |tx, tr_top| {
-                    (MIN_BTM..=MAX_TOP).into_par_iter().for_each_with(tx.clone(), |tx, tr_btm| {
+                for tr_top in MIN_TOP..=MAX_TOP {
+                    for tr_btm in MIN_BTM..=MAX_BTM {
                         let tr = El::new(tr_top, tr_btm);
-
                         if tr.res == 0.0 || tr.res.is_normal() {
-                            (MIN_TOP..=MAX_TOP).into_par_iter().for_each_with(tx.clone(), |tx, bl_top| {
-                                (MIN_BTM..=MAX_TOP).into_par_iter().for_each_with(tx.clone(), |tx, bl_btm| {
+
+                            for bl_top in MIN_TOP..=MAX_TOP {
+                                for bl_btm in MIN_BTM..=MAX_BTM {
                                     let bl = El::new(bl_top, bl_btm);
 
                                     if bl.res == 0.0 || tl.res.is_normal() {
@@ -65,11 +63,11 @@ fn main() {
                                             }
                                         }
                                     }
-                                });
-                            });
+                                }
+                            }
                         }
-                    });
-                });
+                    }
+                }
             }
         });
     });
