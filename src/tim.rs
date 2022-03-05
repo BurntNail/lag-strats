@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 pub struct ScopedTimer {
     start: Instant,
@@ -11,6 +11,9 @@ impl ScopedTimer {
             start: Instant::now(),
             msg,
         }
+    }
+    pub fn so_far (&self) -> Duration {
+        self.start.elapsed()
     }
 }
 
